@@ -8,14 +8,23 @@ Key features:
 
 - uses hyper-rs performance and secure TLS defaults
 - uses openssl PKCS12 password protected TLS identity
-- uses flume unbounded for async io with tokio hyper
+- uses flume unbounded queues with async io from tokio hyper
 - stateful UUID and UTC time data
 - cloud native design
 
 Use cases:
 
 - processing large data files and unknown inputs
+- process numerous request streams
+- processing long lived stateful connection streams
 - microservice template for high performance compute backend
+
+Unbounded can be easily swapped out for bounded queues that have capacity, no problem. Switch `use flume::unbounded` to `use flume::bounded` and change
+the queue creation from `unbounded::<Vec<u8>>();` to `bounded(1)` where `1` would be the number of messages to hold. Setting bounded to 0 capacity will
+require a receiver for every message, which also works fine here.
+
+The use of unbounded here is to maximize utiliation, rather than optimization, although flume queues are rather optimized
+compared to other techniques. Bounded queues are even more optimized.
 
 #### Example server log, showing sticky UUID logging
 
@@ -34,14 +43,15 @@ Use cases:
 ```
 
 We can tell when a ichorsurf is processing more than one at a time because the UID is stateful as an environment variable rather than
-only representing a single transaction. If multiple requests are being processed at the same time, the logging reflect is by having the
+only representing a single transaction. If multiple requests are being processed at the same time, the logging reflects that by having the
 "last in" UUID get picked up by the other threads. Even though the threads are sticky, every initial request will get a UUID generated
-and inserted to the state. When multiple requetss are being processed at the same time, the last request UUID will stick to the threads
+and inserted to the state. When multiple requests are being processed at the same time, the last request UUID will stick to the threads
 as they close out. This value UUID state value further changes as more new requests come in.
 
 The first example logs show several requests to process HTTP bodies over 100MB in size.
 
-This next example shows many requests to proecss smaller HTTP bodies.
+This next example shows many requests to proecss smaller HTTP bodies. Smaller messages work great as well.
+One of the gerat things about unbounded, is that if we want to hold as many potential messages as possible, we can.
 
 ```
 [ 2024-02-09 06:57:33.102609164 UTC INFO ] - Ok("8133e519-a44a-4c5e-865d-5849a17522ee") - Successfully opened unbounded, now reading body to bytes...
@@ -80,6 +90,7 @@ This next example shows many requests to proecss smaller HTTP bodies.
 
 ```
 
+
 ## Required environment variables
 
 ```
@@ -108,30 +119,35 @@ user    0m0.008s
 sys     0m0.007s
 ```
 
+### The container example
+
+The included Dockerfile is minimal, taking a musl libc statically linked version (such as created with `cargo cross`).
+Note that the example does not copy in the required certificate.p12, which is assumed to be inserted separately,
+such as with a kubernetes secret. 
 
 ### Warning: no memory usage limit within
 
-This application has an unbounded queue open, meaning data of
+This application has an unbounded queue open and will read whatever data is sent, meaning data of
 any size can be inserted, until the server can't hold anything 
 else in RAM, at which point the ichorsurf will get `killed`.
 If in a container orchestration system, that might then
 trigger a new container to be created.
 
 Limits on resource consumption can be put in place, but
-the killing behavior intentionally remains. The design is to allow long
-and large data streams without trying to prevent completion, 
+the killing behavior intentionally remains. The design is to allow numerous, long,
+and large, data streams without trying to prevent completion, 
 at all costs.
-
-This can result in long TCP streams of large data files,
-as long as there is enough RAM to load the files.
 
 <b>Without sufficient protections to restrict access,
 this service can cause memory exhaustion if users
 send large data files or hold streams open with
 continuous data.
 
-If more refined and normal HTTP services are needed, I suggest Actix, see https://github.com/jpegleg/morpho-web
+If more refined and normal HTTP services are needed (web server functionality), I suggest Actix, see https://github.com/jpegleg/morpho-web
 
-Front-ends would typically want to be more refined than this. Actix, and others, have all the tooling built out, no need to re-invent the wheel.
-But ichorsurf is intentionally simplistic, such as so a custom service might benefit from the streaming and performance properties.
+Front-ends would typically want to be more refined than ichorsurf.
+Actix, and others, have all the HTTP tooling built out, no need to re-invent the wheel.
+But ichorsurf is intentionally simplistic, such as so a custom data service might benefit from the streaming and performance properties.
 </b>
+
+Memory limits at the kubernetes Deployment level should work well for this. 
