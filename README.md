@@ -14,10 +14,10 @@ Key features:
 
 Use cases:
 
-- processing large data files and unknown inputs
+- processing large data files and unknown inputs without blocking recv from client
 - process numerous request streams
 - processing long lived stateful connection streams
-- microservice template for high performance compute backend
+- microservice template for high performance compute and data backend
 
 Unbounded can be easily swapped out for bounded queues that have capacity, no problem. Switch `use flume::unbounded` to `use flume::bounded` and change
 the queue creation from `unbounded::<Vec<u8>>();` to `bounded(1)` where `1` would be the number of messages to hold. Setting bounded to 0 capacity will
@@ -44,14 +44,14 @@ compared to other techniques. Bounded queues are even more optimized.
 
 We can tell when a ichorsurf is processing more than one at a time because the UID is stateful as an environment variable rather than
 only representing a single transaction. If multiple requests are being processed at the same time, the logging reflects that by having the
-"last in" UUID get picked up by the other threads. Even though the threads are sticky, every initial request will get a UUID generated
+"last in" UUID get picked up by the other threads. Even though the UUID is sticky from an environment variable, every initial request will get a UUID generated
 and inserted to the state. When multiple requests are being processed at the same time, the last request UUID will stick to the threads
-as they close out. This value UUID state value further changes as more new requests come in.
+as they close out. This UUID state value further changes as more new requests come in.
 
 The first example logs show several requests to process HTTP bodies over 100MB in size.
 
 This next example shows many requests to proecss smaller HTTP bodies. Smaller messages work great as well.
-One of the gerat things about unbounded, is that if we want to hold as many potential messages as possible, we can.
+One of the great things about unbounded, is that if we want to hold as many potential messages as possible, we can.
 
 ```
 [ 2024-02-09 06:57:33.102609164 UTC INFO ] - Ok("8133e519-a44a-4c5e-865d-5849a17522ee") - Successfully opened unbounded, now reading body to bytes...
@@ -127,9 +127,10 @@ such as with a kubernetes secret.
 
 ### Warning: no memory usage limit within
 
-This application has an unbounded queue open and will read whatever data is sent, meaning data of
+This application has an unbounded queue open and will read whatever data is sent, meaning any number of messages and data of
 any size can be inserted, until the server can't hold anything 
-else in RAM, at which point the ichorsurf will get `killed`.
+else, at which point the ichorsurf will get `killed`.
+
 If in a container orchestration system, that might then
 trigger a new container to be created.
 
@@ -145,9 +146,9 @@ continuous data.
 
 If more refined and normal HTTP services are needed (web server functionality), I suggest Actix, see https://github.com/jpegleg/morpho-web
 
-Front-ends would typically want to be more refined than ichorsurf.
-Actix, and others, have all the HTTP tooling built out, no need to re-invent the wheel.
-But ichorsurf is intentionally simplistic, such as so a custom data service might benefit from the streaming and performance properties.
+Front-ends would typically want to be more refined than ichorsurf to include headers, redirection, status codes, fixed routes.
+All of that can be done in hyper, but Actix, and others, have all the HTTP tooling built out and ready, no need to re-invent the wheel.
+But ichorsurf is intentionally simplistic and flexible, such as so a custom data service might benefit from the streaming and performance properties.
 </b>
 
 Memory limits at the kubernetes Deployment level should work well for this. 
