@@ -1,0 +1,22 @@
+[package]
+name = "ichorsurf"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+hyper = { version = "0.14", features = ["full", "server"] }
+tokio-rustls = "0.23.1"
+rustls = "0.20.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rustls-pemfile = "2.0.0"
+pkcs8 = "0.7.5"
+flume = "0.10"
+http = "0.2"
+hyper-util = "0.1.3"
+openssl = "0.10.63"
+futures = "0.3"
+futures-util = "0.3.30"
+chrono = "0.4.33"
+uuid = { version = "0.4", features = ["serde", "v4"] }
