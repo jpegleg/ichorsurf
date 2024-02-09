@@ -52,7 +52,7 @@ as they close out. This UUID state value further changes as more new requests co
 
 The first example logs show several requests to process HTTP bodies over 100MB in size.
 
-This next example shows many requests to proecss smaller HTTP bodies. Smaller messages work great as well.
+This next example shows many requests to process smaller HTTP bodies. Smaller messages work great as well.
 One of the great things about unbounded, is that if we want to hold as many potential messages as possible, we can.
 
 ```
