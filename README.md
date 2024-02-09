@@ -6,10 +6,12 @@ Ichorsurf is a simple reference template for security and performance optimizati
 
 Key features:
 
-- uses hyper-rs performance and secure TLS defaults
+- uses hyper and tokio performance
+- rusTLS secure TLS defaults
 - uses openssl PKCS12 password protected TLS identity
 - uses flume unbounded queues with async io from tokio hyper
-- stateful UUID and UTC time data
+- stateful UUID
+- detailed UTC time data
 - cloud native design
 
 Use cases:
@@ -23,7 +25,7 @@ Unbounded can be easily swapped out for bounded queues that have capacity, no pr
 the queue creation from `unbounded::<Vec<u8>>();` to `bounded(1)` where `1` would be the number of messages to hold. Setting bounded to 0 capacity will
 require a receiver for every message, which also works fine here.
 
-The use of unbounded here is to maximize utiliation, rather than optimization, although flume queues are rather optimized
+The use of unbounded here is to maximize utilization, rather than optimization, although flume queues are rather optimized
 compared to other techniques. Bounded queues are even more optimized.
 
 #### Example server log, showing sticky UUID logging
@@ -42,7 +44,7 @@ compared to other techniques. Bounded queues are even more optimized.
 
 ```
 
-We can tell when a ichorsurf is processing more than one at a time because the UID is stateful as an environment variable rather than
+We can tell when an ichorsurf is processing more than one at a time because the UID is stateful as an environment variable rather than
 only representing a single transaction. If multiple requests are being processed at the same time, the logging reflects that by having the
 "last in" UUID get picked up by the other threads. Even though the UUID is sticky from an environment variable, every initial request will get a UUID generated
 and inserted to the state. When multiple requests are being processed at the same time, the last request UUID will stick to the threads
@@ -97,7 +99,7 @@ One of the great things about unbounded, is that if we want to hold as many pote
 PKCSPATH is the path to the PKCS12 file
 PKCSPASSWORD is the password to the PKCS12 file
 ```
-Also note that the template uses the environment variable "txid" for telemetry/logging purposes.
+Also note that the template uses the environment variable "txid" for logging data purposes.
 The txid variable is overwritten as events occur and does not need to be set. The other two
 do need to be set, such as from a kubernetes secret object.
 
