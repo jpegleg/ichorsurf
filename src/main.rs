@@ -98,7 +98,7 @@ async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
             if hyper::server::conn::Http::new().serve_connection(tls_stream, service).await.is_err() {
                 let erdate: DateTime<Utc> = Utc::now();
                 let gxid = env::var("txid").unwrap();
-                println!("[ {} INFO ] - {:?} - End client transaction.", erdate, gxid);
+                eprintln!("[ {} INFO ] - - connection ended, last in ID: {:?}", erdate, gxid);
             }
         });
     }
@@ -106,4 +106,4 @@ async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     run_server()
-}    
+}
