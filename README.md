@@ -95,7 +95,7 @@ One of the great things about unbounded, is that if we want to hold as many pote
 
 ```
 PKCSPATH is the path to the PKCS12 file
-PKCSPASWORD is the password to the PKCS12 file
+PKCSPASSWORD is the password to the PKCS12 file
 ```
 Also note that the template uses the environment variable "txid" for telemetry/logging purposes.
 The txid variable is overwritten as events occur and does not need to be set. The other two
